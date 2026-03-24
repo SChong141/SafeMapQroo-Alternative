@@ -4,44 +4,40 @@ import { useCreateShelter } from "../api/Requests/shelter/CreateShelterHook";
 
 export default function RegisterModal({ onClose, onCreate }) {
   const [newShelter, setNewShelter] = useState({
-    id: "",
     name: "",
     address: "",
     capacity: "",
-    occupied: 0,
-    phone: "",
-    notes: "",
     lat: "",
     lng: "",
+    municipality: 0,
+    available: true,
   });
 
-  const { data, loading, error, createShelter } = useCreateShelter(); // Uso del hook
+  const { loading, createShelter } = useCreateShelter();
 
   async function handleCreateShelter(e) {
     e.preventDefault();
-    if (!newShelter.id || !newShelter.name) {
-      return alert("Completa al menos ID y nombre del albergue");
+    if (!newShelter.name) {
+      return alert("El nombre del refugio es requerido");
     }
 
     const payload = {
-      id: newShelter.id,
       name: newShelter.name,
       address: newShelter.address,
       capacity: Number(newShelter.capacity) || 0,
-      occupied: Number(newShelter.occupied) || 0,
-      phone: newShelter.phone,
-      notes: newShelter.notes,
-      lat: newShelter.lat ? Number(newShelter.lat) : undefined,
-      lng: newShelter.lng ? Number(newShelter.lng) : undefined,
+      latidude: newShelter.lat ? Number(newShelter.lat) : 0,
+      longitude: newShelter.lng ? Number(newShelter.lng) : 0,
+      municipality: Number(newShelter.municipality),
+      available: newShelter.available,
     };
 
     try {
-      const createdShelter = await createShelter(payload); // Usando el método `createShelter` del hook
-      onCreate(createdShelter); // Llamar a la función onCreate para pasar el albergue creado
-      onClose(); // Cerrar el modal después de crear el albergue
+      const createdShelter = await createShelter(payload);
+      onCreate(createdShelter);
+      onClose();
     } catch (err) {
-      console.error("Error creando albergue:", err);
-      alert("No fue posible crear el albergue en el servidor. Revisa la consola para más detalles.");
+      console.error("Error creando refugio:", err);
+      alert("No fue posible crear el refugio en el servidor.");
     }
   }
 
@@ -55,85 +51,76 @@ export default function RegisterModal({ onClose, onCreate }) {
         animate={{ scale: 1, opacity: 1 }}
         className="relative z-10 w-full max-w-lg bg-white rounded-lg p-6 shadow-2xl text-lg"
       >
-        <h3 className="text-lg font-semibold mb-4">Registrar nuevo albergue</h3>
+        <h3 className="text-lg font-semibold mb-4">Registrar nuevo refugio</h3>
 
         <div className="grid grid-cols-2 gap-3">
           <input
-            placeholder="ID (ej. S04)"
-            value={newShelter.id}
-            onChange={(e) =>
-              setNewShelter((p) => ({ ...p, id: e.target.value }))
-            }
-            className="px-3 py-2 rounded border col-span-1"
-          />
-          <input
             placeholder="Nombre"
             value={newShelter.name}
-            onChange={(e) =>
-              setNewShelter((p) => ({ ...p, name: e.target.value }))
-            }
-            className="px-3 py-2 rounded border col-span-1"
+            onChange={(e) => setNewShelter((p) => ({ ...p, name: e.target.value }))}
+            className="px-3 py-2 rounded border col-span-2"
           />
 
           <input
             placeholder="Dirección"
             value={newShelter.address}
-            onChange={(e) =>
-              setNewShelter((p) => ({ ...p, address: e.target.value }))
-            }
+            onChange={(e) => setNewShelter((p) => ({ ...p, address: e.target.value }))}
             className="px-3 py-2 rounded border col-span-2"
           />
 
           <input
-            placeholder="Teléfono"
-            value={newShelter.phone}
-            onChange={(e) =>
-              setNewShelter((p) => ({ ...p, phone: e.target.value }))
-            }
-            className="px-3 py-2 rounded border col-span-1"
-          />
-          <input
             placeholder="Capacidad"
+            type="number"
             value={newShelter.capacity}
-            onChange={(e) =>
-              setNewShelter((p) => ({ ...p, capacity: e.target.value }))
-            }
+            onChange={(e) => setNewShelter((p) => ({ ...p, capacity: e.target.value }))}
             className="px-3 py-2 rounded border col-span-1"
           />
 
-          <input
-            placeholder="Ocupado (opcional)"
-            value={newShelter.occupied}
-            onChange={(e) =>
-              setNewShelter((p) => ({ ...p, occupied: e.target.value }))
-            }
+          <select
+            value={newShelter.municipality}
+            onChange={(e) => setNewShelter((p) => ({ ...p, municipality: e.target.value }))}
             className="px-3 py-2 rounded border col-span-1"
-          />
+          >
+            <option value={0}>Cozumel</option>
+            <option value={1}>Felipe Carrillo Puerto</option>
+            <option value={2}>Isla Mujeres</option>
+            <option value={3}>Othón P. Blanco</option>
+            <option value={4}>Benito Juárez (Cancún)</option>
+            <option value={5}>José María Morelos</option>
+            <option value={6}>Lázaro Cárdenas</option>
+            <option value={7}>Playa Del Carmen</option>
+            <option value={8}>Tulum</option>
+            <option value={9}>Bacalar</option>
+            <option value={10}>Puerto Morelos</option>
+          </select>
+
           <input
-            placeholder="Lat"
+            placeholder="Latitud"
+            type="number"
+            step="any"
             value={newShelter.lat}
-            onChange={(e) =>
-              setNewShelter((p) => ({ ...p, lat: e.target.value }))
-            }
+            onChange={(e) => setNewShelter((p) => ({ ...p, lat: e.target.value }))}
             className="px-3 py-2 rounded border col-span-1"
           />
 
           <input
-            placeholder="Lng"
+            placeholder="Longitud"
+            type="number"
+            step="any"
             value={newShelter.lng}
-            onChange={(e) =>
-              setNewShelter((p) => ({ ...p, lng: e.target.value }))
-            }
+            onChange={(e) => setNewShelter((p) => ({ ...p, lng: e.target.value }))}
             className="px-3 py-2 rounded border col-span-1"
           />
-          <input
-            placeholder="Notas"
-            value={newShelter.notes}
-            onChange={(e) =>
-              setNewShelter((p) => ({ ...p, notes: e.target.value }))
-            }
-            className="px-3 py-2 rounded border col-span-1"
-          />
+
+          <div className="col-span-2 flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="available"
+              checked={newShelter.available}
+              onChange={(e) => setNewShelter((p) => ({ ...p, available: e.target.checked }))}
+            />
+            <label htmlFor="available" className="text-sm">Disponible</label>
+          </div>
         </div>
 
         <div className="mt-4 flex justify-end gap-2">
@@ -149,7 +136,7 @@ export default function RegisterModal({ onClose, onCreate }) {
             disabled={loading}
             className="px-4 py-2 rounded bg-green-600 text-white"
           >
-            {loading ? "Guardando..." : "Crear albergue"}
+            {loading ? "Guardando..." : "Crear refugio"}
           </button>
         </div>
       </motion.form>

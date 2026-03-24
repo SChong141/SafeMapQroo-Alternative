@@ -1,7 +1,13 @@
 // src/components/utils.js
 
-export function occupancyBadge(occupied, capacity) {
-  // Manejo por si capacity viene en 0 o undefined
+export function occupancyBadge(occupied, capacity, available) {
+  if (available === false) {
+    return {
+      text: "No disponible",
+      className: "bg-red-100 text-red-800",
+      borderClass: "border-red-400",
+    };
+  }
   if (!capacity) {
     return {
       text: "—",
@@ -9,9 +15,7 @@ export function occupancyBadge(occupied, capacity) {
       borderClass: "border-gray-300",
     };
   }
-
   const ratio = occupied / capacity;
-
   if (ratio >= 1) {
     return {
       text: "Lleno",
@@ -19,7 +23,6 @@ export function occupancyBadge(occupied, capacity) {
       borderClass: "border-red-400",
     };
   }
-
   if (ratio >= 0.8) {
     return {
       text: "Casi lleno",
@@ -27,7 +30,6 @@ export function occupancyBadge(occupied, capacity) {
       borderClass: "border-orange-400",
     };
   }
-
   return {
     text: "Disponible",
     className: "bg-green-100 text-green-800",
