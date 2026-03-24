@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { getOneShelters } from "../api/Requests/shelter/GetOneShelterHook";
 import { updateShelter as useUpdateShelter } from "../api/Requests/shelter/UpdateShelterHook";
 import { useDeleteShelter } from "../api/Requests/shelter/DeleteShelterHook";
+import { LogingHook } from "../api/Requests/Authorize/RegisterOrganizarhook";
+import ShelterOccupancyDetail from "./ShelterOccupancyDetail";
 
 const MUNICIPALITIES = [
   { value: 0, label: "Cozumel" },
@@ -23,7 +25,47 @@ export default function ShelterDetail({ shelter }) {
   const { updateShelter } = useUpdateShelter();
   const { deleteShelter } = useDeleteShelter();
 
+  const { RegisterOrganizerFunction, loading: loadingOrganizer } = LogingHook();
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showAddEmployeeModal, setShowAddEmployeeModal] = useState(false);
+  const [showHistorialModal, setShowHistorialModal] = useState(false);
+  const [employeeForm, setEmployeeForm] = useState({
+    userName: "",
+    email: "",
+    phoneNumber: "",
+    password: "",
+    shelterId: "",
+  });
+  const [employeeError, setEmployeeError] = useState("");
+  const [employeeSuccess, setEmployeeSuccess] = useState("");
+
+  async function handleAddEmployee(e) {
+    e.preventDefault();
+    setEmployeeError("");
+    setEmployeeSuccess("");
+    try {
+      await RegisterOrganizerFunction({
+        userName: employeeForm.userName,
+        email: employeeForm.email,
+        phoneNumber: employeeForm.phoneNumber,
+        password: employeeForm.password,
+        shelterId: shelterId,
+      });
+      setEmployeeSuccess("Organizador registrado correctamente.");
+      setEmployeeForm({ userName: "", email: "", phoneNumber: "", password: "", shelterId: "" });
+      setTimeout(() => {
+        setShowAddEmployeeModal(false);
+        setEmployeeSuccess("");
+      }, 1500);
+    } catch (err) {
+      const msg =
+        err?.response?.data?.message ||
+        err?.response?.data ||
+        "Error al registrar el organizador. Verifica los datos.";
+      setEmployeeError(typeof msg === "string" ? msg : JSON.stringify(msg));
+    }
+  }
+
   const [editForm, setEditForm] = useState({
     name: "",
     address: "",
@@ -149,8 +191,8 @@ export default function ShelterDetail({ shelter }) {
         >
           Editar
         </button>
-        <button className="px-3 py-1 rounded-md border">Agregar empleado</button>
-        <button className="px-3 py-1 rounded-md border">Ver historial</button>
+        <button className="px-3 py-1 rounded-md border hover:bg-gray-100" onClick={() => { setShowAddEmployeeModal(true); setEmployeeError(""); setEmployeeSuccess(""); }}>Agregar empleado</button>
+        <button className="px-3 py-1 rounded-md border hover:bg-gray-100" onClick={() => setShowHistorialModal(true)}>Ver historial</button>
       </div>
 
       <div className="mt-6">
@@ -184,6 +226,111 @@ export default function ShelterDetail({ shelter }) {
           </tbody>
         </table>
       </div>
+
+      {/* Modal Historial de ocupación */}
+      {showHistorialModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setShowHistorialModal(false)}
+          />
+          <div className="relative z-10 bg-white rounded-lg shadow-2xl p-6 w-full max-w-lg">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">
+                Historial — {shelterDetails.name}
+              </h3>
+              <button
+                onClick={() => setShowHistorialModal(false)}
+                className="text-gray-400 hover:text-gray-700 text-xl leading-none"
+              >
+                ✕
+              </button>
+            </div>
+            <ShelterOccupancyDetail shelterId={shelterId} />
+          </div>
+        </div>
+      )}
+
+      {/* Modal Agregar Empleado */}
+      {showAddEmployeeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setShowAddEmployeeModal(false)}
+          />
+          <div className="relative z-10 w-full max-w-lg bg-white rounded-lg p-6 shadow-2xl">
+            <h3 className="text-lg font-semibold mb-4">Agregar organizador</h3>
+            <p className="text-sm text-gray-500 mb-4">
+              Se registrará un nuevo organizador y se asignará al refugio:{" "}
+              <span className="font-medium text-gray-700">{shelterDetails.name}</span>
+            </p>
+
+            {employeeError && (
+              <div className="mb-3 px-3 py-2 bg-red-50 border border-red-200 text-red-700 rounded text-sm">
+                {employeeError}
+              </div>
+            )}
+            {employeeSuccess && (
+              <div className="mb-3 px-3 py-2 bg-green-50 border border-green-200 text-green-700 rounded text-sm">
+                {employeeSuccess}
+              </div>
+            )}
+
+            <form onSubmit={handleAddEmployee}>
+              <div className="grid grid-cols-2 gap-3">
+                <input
+                  placeholder="Nombre de usuario"
+                  value={employeeForm.userName}
+                  onChange={(e) => setEmployeeForm((p) => ({ ...p, userName: e.target.value }))}
+                  className="px-3 py-2 rounded border col-span-2"
+                  required
+                />
+                <input
+                  placeholder="Correo electrónico"
+                  type="email"
+                  value={employeeForm.email}
+                  onChange={(e) => setEmployeeForm((p) => ({ ...p, email: e.target.value }))}
+                  className="px-3 py-2 rounded border col-span-2"
+                  required
+                />
+                <input
+                  placeholder="Número de teléfono"
+                  type="tel"
+                  value={employeeForm.phoneNumber}
+                  onChange={(e) => setEmployeeForm((p) => ({ ...p, phoneNumber: e.target.value }))}
+                  className="px-3 py-2 rounded border col-span-2"
+                  required
+                />
+                <input
+                  placeholder="Contraseña (mín. 12 caracteres, mayús, núm, símbolo)"
+                  type="password"
+                  value={employeeForm.password}
+                  onChange={(e) => setEmployeeForm((p) => ({ ...p, password: e.target.value }))}
+                  className="px-3 py-2 rounded border col-span-2"
+                  required
+                  minLength={12}
+                />
+              </div>
+              <div className="mt-4 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAddEmployeeModal(false)}
+                  className="px-3 py-2 rounded border hover:bg-gray-100"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={loadingOrganizer}
+                  className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 disabled:opacity-60"
+                >
+                  {loadingOrganizer ? "Registrando..." : "Registrar organizador"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Modal de edición */}
       {showEditModal && (
