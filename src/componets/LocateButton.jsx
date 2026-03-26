@@ -34,7 +34,7 @@ export default function LocateButton({ onLocation, setId }) {
         timeout: 100000,
       }
     );
-  }, []); // ← array vacío: solo corre una vez
+  }, []);
 
   const handleLocate = () => {
     if (!shelters?.shelter) {

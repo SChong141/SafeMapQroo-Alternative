@@ -15,8 +15,7 @@ function AdminSidebar() {
 
   return (
     <aside
-      style={{ background: "linear-gradient(180deg, #6B1A2A 0%, #8B2535 60%, #7A1F2E 100%)" }}
-      className="w-64 flex flex-col shadow-2xl shrink-0"
+      className="w-64 flex flex-col shadow-2xl shrink-0 bg-[#611232]"
     >
       {/* Brand */}
       <div className="px-5 pt-6 pb-4 border-b border-white/10">
@@ -47,12 +46,8 @@ function AdminSidebar() {
         <p className="text-white/30 text-xs uppercase tracking-widest px-3 mb-2">Menú</p>
         <a className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/15 text-white cursor-pointer transition-all">
           <Home size={16} className="text-red-300" />
-          <span className="text-sm font-medium">Resumen</span>
+          <span className="text-sm font-medium">Refugios</span>
           <span className="ml-auto w-1.5 h-1.5 rounded-full bg-red-300"></span>
-        </a>
-        <a className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/60 hover:bg-white/10 hover:text-white cursor-pointer transition-all">
-          <MapPin size={16} />
-          <span className="text-sm">Refugios</span>
         </a>
       </nav>
 

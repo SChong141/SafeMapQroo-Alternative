@@ -14,8 +14,7 @@ function OrganizerSidebar() {
 
   return (
     <aside
-      style={{ background: "linear-gradient(180deg, #6B1A2A 0%, #8B2535 60%, #7A1F2E 100%)" }}
-      className="w-64 flex flex-col shadow-2xl shrink-0"
+      className="w-64 flex flex-col shadow-2xl shrink-0 bg-[#611232]"
     >
       {/* Brand */}
       <div className="px-5 pt-6 pb-4 border-b border-white/10">
@@ -164,7 +163,7 @@ function ShelterDetailPanel({ shelter }) {
         </div>
         <div className="text-right shrink-0">
           <div className="text-xs text-gray-500">Capacidad</div>
-          <div className="text-2xl font-bold">{shelterDetails.capacity}</div>
+          <div className="text-4xl font-bold">{shelterDetails.capacity}</div>
           <div className="text-xs text-gray-400">Ocupado: {totalOccupancy}</div>
         </div>
       </div>
@@ -197,8 +196,7 @@ function ShelterDetailPanel({ shelter }) {
 
       {/* Formulario */}
       <div className="border-t pt-4">
-        <p className="text-sm font-medium text-gray-700 mb-1">Registrar personas</p>
-        <p className="text-xs text-gray-400 mb-2">Usa un valor negativo para corregir salidas (ej: -5)</p>
+        <p className="text-sm font-medium text-gray-700 mb-2">Registrar personas</p>
         <div className="flex items-center gap-2">
           <input
             type="number"
@@ -217,9 +215,33 @@ function ShelterDetailPanel({ shelter }) {
             {updating ? "Actualizando..." : "Actualizar"}
           </button>
         </div>
-        {warning && <p className="text-red-500 text-xs mt-1">{warning}</p>}
-        {updateError && <p className="text-red-500 text-xs mt-1">Error al actualizar ocupación.</p>}
-        {successMsg && <p className="text-green-600 text-xs mt-1">{successMsg}</p>}
+
+        {/* Botones rápidos */}
+        <div className="flex items-center gap-2 mt-3 flex-wrap">
+          <span className="text-xs text-gray-400">Accesos rápidos:</span>
+          {[1, 2, 4].map((n) => (
+            <button
+              key={`+${n}`}
+              onClick={() => setNewOccupancy(String(n))}
+              className="px-2.5 py-1 rounded-full border text-xs bg-green-50 text-green-700 border-green-200 hover:bg-green-100 transition-colors"
+            >
+              +{n}
+            </button>
+          ))}
+          {[1, 2, 4].map((n) => (
+            <button
+              key={`-${n}`}
+              onClick={() => setNewOccupancy(String(-n))}
+              className="px-2.5 py-1 rounded-full border text-xs bg-red-50 text-red-700 border-red-200 hover:bg-red-100 transition-colors"
+            >
+              −{n}
+            </button>
+          ))}
+        </div>
+
+        {warning && <p className="text-red-500 text-xs mt-2">{warning}</p>}
+        {updateError && <p className="text-red-500 text-xs mt-2">Error al actualizar ocupación.</p>}
+        {successMsg && <p className="text-green-600 text-xs mt-2">{successMsg}</p>}
       </div>
 
       {/* Empleados */}
@@ -272,33 +294,99 @@ function HistorialPanel({ shelterId }) {
     if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
   }, [data]);
 
-  const filtered = Array.isArray(data) ? data.filter((o) => o.shelterId === shelterId) : [];
+  const sorted = Array.isArray(data)
+    ? data
+        .filter((o) => o.shelterId === shelterId)
+        .sort((a, b) => new Date(a.updatedOn) - new Date(b.updatedOn))
+    : [];
+
+  const latest = sorted[sorted.length - 1];
+  const peak = sorted.reduce((max, e) => (e.currentOccupancy > max ? e.currentOccupancy : max), 0);
+
+  function formatTime(dateStr) {
+    const d = new Date(dateStr);
+    return d.toLocaleString("es-MX", {
+      day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit",
+    });
+  }
+
+  function getDotColor(occ, idx) {
+    if (idx === sorted.length - 1) return "bg-gray-400";
+    const prev = sorted[idx - 1]?.currentOccupancy ?? occ.currentOccupancy;
+    const delta = occ.currentOccupancy - prev;
+    if (delta > 0) return "bg-green-500";
+    if (delta < 0) return "bg-red-400";
+    return "bg-gray-300";
+  }
+
+  function getValueColor(occ, idx) {
+    if (idx === sorted.length - 1) return "text-gray-600";
+    const prev = sorted[idx - 1]?.currentOccupancy ?? occ.currentOccupancy;
+    const delta = occ.currentOccupancy - prev;
+    if (delta > 0) return "text-green-700";
+    if (delta < 0) return "text-red-600";
+    return "text-gray-500";
+  }
 
   return (
-    <section className="w-72 shrink-0 bg-white p-4 rounded-lg shadow-sm flex flex-col">
-      <div className="flex items-center gap-2 mb-3 pb-2 border-b">
+    <section className="w-72 shrink-0 bg-white p-4 rounded-lg shadow-sm flex flex-col gap-3">
+      <div className="flex items-center gap-2 pb-2 border-b">
         <TrendingUp size={15} className="text-gray-500" />
         <h3 className="font-semibold text-sm">Historial de ocupación</h3>
       </div>
 
+      {/* Mini stats */}
+      <div className="grid grid-cols-2 gap-2">
+        <div className="bg-gray-50 rounded-lg px-3 py-2 text-center">
+          <div className="text-2xl font-bold text-gray-800">{latest?.currentOccupancy ?? "—"}</div>
+          <div className="text-xs text-gray-400">Actual</div>
+        </div>
+        <div className="bg-gray-50 rounded-lg px-3 py-2 text-center">
+          <div className="text-2xl font-bold">{peak}</div>
+          <div className="text-xs text-gray-400">Máximo registrado</div>
+        </div>
+      </div>
+
       {loading && <p className="text-gray-400 text-xs">Cargando...</p>}
       {error && <p className="text-red-400 text-xs">Error al cargar historial.</p>}
-      {!loading && !error && filtered.length === 0 && (
-        <p className="text-gray-400 text-xs text-center mt-4">Sin registros de ocupación.</p>
+      {!loading && !error && sorted.length === 0 && (
+        <p className="text-gray-400 text-xs text-center mt-2">Sin registros de ocupación.</p>
       )}
 
-      <ul ref={listRef} className="space-y-2 overflow-y-auto flex-1" style={{ maxHeight: "500px" }}>
-        {filtered.map((occ, i) => (
-          <li key={i} className="bg-gray-50 px-3 py-2.5 rounded-lg shadow-sm flex flex-col">
-            <span className={`font-extrabold text-base ${occ.currentOccupancy < 0 ? "text-red-500" : "text-indigo-600"}`}>
-              {occ.currentOccupancy > 0 ? "+" : ""}{occ.currentOccupancy} personas
-            </span>
-            <span className="text-gray-400 text-xs mt-0.5">
-              {new Date(occ.updatedOn).toLocaleString()}
-            </span>
-          </li>
-        ))}
-      </ul>
+      {/* Timeline */}
+      <div ref={listRef} className="overflow-y-auto flex-1 relative" style={{ maxHeight: "420px" }}>
+        <div className="absolute left-[8px] top-1 bottom-1 w-px bg-gray-100" />
+        <div className="flex flex-col">
+          {[...sorted].reverse().map((occ, idx) => {
+            const origIdx = sorted.length - 1 - idx;
+            const isFirst = idx === 0;
+            const dotColor = getDotColor(occ, origIdx);
+            const valueColor = getValueColor(occ, origIdx);
+            return (
+              <div
+                key={idx}
+                className={`relative flex items-start pl-5 py-2 rounded-lg transition-colors ${isFirst ? "bg-indigo-50/50" : "hover:bg-gray-50"}`}
+              >
+                <div className={`absolute left-[4px] top-[13px] w-[9px] h-[9px] rounded-full border-2 border-white ${dotColor}`} />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className={`text-lg font-bold ${valueColor}`}>
+                      {occ.currentOccupancy}
+                      <span className="text-sm font-normal ml-1 text-gray-400">personas</span>
+                    </span>
+                    {isFirst && (
+                      <span className="text-sm px-2 py-0.5 rounded-full border">
+                        Reciente
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-sm text-gray-400 mt-0.5">{formatTime(occ.updatedOn)}</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </section>
   );
 }

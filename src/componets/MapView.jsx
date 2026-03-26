@@ -66,8 +66,8 @@ export default function MapView({ size = "normal" }) {
             icon={L.divIcon({
               className: "user-location",
               html: `<div class="user-location-dot"></div>`,
-              iconSize: [20, 20],
-              iconAnchor: [10, 10],
+              iconSize: [18, 18],
+              iconAnchor: [9, 9],
             })}
           >
             <Popup>Estás aquí</Popup>
